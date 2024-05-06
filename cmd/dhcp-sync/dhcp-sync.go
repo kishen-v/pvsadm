@@ -87,7 +87,7 @@ func syncDHCPD() {
 		klog.Fatalf("failed to create a session with IBM cloud: %v", err)
 	}
 
-	pvmclient, err := client.NewPVMClientWithEnv(c, pkg.Options.WorkspaceID, "", "prod")
+	pvmclient, err := client.NewPVMClientWithEnv(c, pkg.Options.WorkspaceID, "", client.DefaultEnvProd)
 	if err != nil {
 		klog.Fatalf("failed to create a PVM client: %v", err)
 	}
