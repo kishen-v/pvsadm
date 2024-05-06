@@ -32,10 +32,10 @@ func runImageQcow2OvaCMD(args ...string) (int, string, string) {
 var _ = CMDDescribe("pvsadm qcow2ova tests", func() {
 	var (
 		image *os.File
+		err   error
 	)
 
 	BeforeSuite(func() {
-		var err error
 		Expect(os.Getenv("IBMCLOUD_API_KEY")).NotTo(BeEmpty(), "IBMCLOUD_API_KEY must be set before running \"make test\"")
 		image, err = os.CreateTemp("", "qcow2ova")
 		Expect(err).NotTo(HaveOccurred())
