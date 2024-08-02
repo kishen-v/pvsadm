@@ -8,3 +8,5 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+      # Check for npm updates at 9am UTC
+      time: "08:00"
