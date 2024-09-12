@@ -40,9 +40,10 @@ import (
 
 // Test case variables
 var (
-	err               error
-	s3client          *client.Client
-	serviceInstance   *resourcecontrollerv2.ResourceInstance
+	err             error
+	s3client        *client.Client
+	serviceInstance *resourcecontrollerv2.ResourceInstance
+	// TODO: remove IBMCLOUD_API_KEY after it has been deprecated completely. Replace with IBMCLOUD_APIKEY
 	APIKey            = os.Getenv("IBMCLOUD_API_KEY")
 	objectsFolderName = "tempFolder"
 	SpecFileName      = "spec/spec.yaml"

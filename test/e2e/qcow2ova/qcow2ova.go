@@ -37,6 +37,8 @@ var _ = CMDDescribe("pvsadm qcow2ova tests", func() {
 	BeforeSuite(func() {
 		var err error
 		Expect(os.Getenv("IBMCLOUD_API_KEY")).NotTo(BeEmpty(), "IBMCLOUD_API_KEY must be set before running \"make test\"")
+		// TODO: remove IBMCLOUD_API_KEY after it has been deprecated completely. Replace with IBMCLOUD_APIKEY
+		os.Setenv("IBMCLOUD_APIKEY", os.Getenv("IBMCLOUD_API_KEY"))
 		image, err = os.CreateTemp("", "qcow2ova")
 		Expect(err).NotTo(HaveOccurred())
 		_, err = image.WriteString("some dummy image")
@@ -45,6 +47,7 @@ var _ = CMDDescribe("pvsadm qcow2ova tests", func() {
 
 	AfterSuite(func() {
 		image.Close()
+		os.Unsetenv("IBMCLOUD_APIKEY")
 	})
 
 	It("run with --help option", func() {
