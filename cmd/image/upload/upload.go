@@ -41,7 +41,7 @@ var Cmd = &cobra.Command{
 pvsadm image upload --help for information
 
 # Set the API key or feed the --api-key commandline argument
-export IBMCLOUD_API_KEY=<IBM_CLOUD_API_KEY>
+export IBMCLOUD_APIKEY=<IBM_CLOUD_APIKEY>
 
 Examples:
 
@@ -105,7 +105,7 @@ pvsadm image upload --bucket bucket1320 -f centos-8-latest.ova.gz --bucket-regio
 		}
 
 		// Create PowerVS resource controller client
-		pvsClient, err := client.NewClientWithEnv(pkg.Options.APIKey, pkg.Options.Environment, pkg.Options.Debug)
+		pvsClient, err := client.NewClientWithEnv(pkg.Options.Environment)
 		if err != nil {
 			return err
 		}

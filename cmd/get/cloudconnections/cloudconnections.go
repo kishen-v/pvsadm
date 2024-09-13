@@ -47,7 +47,7 @@ var Cmd = &cobra.Command{
 	Long:  "List the existing cloud connections enabled across all workspaces in the account",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options
-		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
+		c, err := client.NewClientWithEnv(opt.Environment)
 		if err != nil {
 			klog.Errorf("failed to create a session with IBM cloud: %v", err)
 			return err
@@ -71,7 +71,7 @@ var Cmd = &cobra.Command{
 		cloudConnections := map[string]cloudConnectionDetails{}
 		authenticator := &core.IamAuthenticator{ApiKey: pkg.Options.APIKey, URL: environment[client.TPEndpoint]}
 		klog.Info("Listing cloud connections across all workspaces, please wait..")
-		// Create a IBM PI Session per zone and reuse them across the workspaces in the same zone.
+		// Create IBM PI Session per zone and reuse them across the workspaces in the same zone.
 		for workspaceZone, workspaces := range zoneWorkspaces {
 			pvmclientOptions := ibmpisession.IBMPIOptions{
 				Authenticator: authenticator,

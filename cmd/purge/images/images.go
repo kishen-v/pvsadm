@@ -41,7 +41,7 @@ pvsadm purge --help for information
 
 		opt := pkg.Options
 
-		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
+		c, err := client.NewClientWithEnv(opt.Environment)
 
 		if err != nil {
 			return err

@@ -39,7 +39,7 @@ pvsadm purge --help for information
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.Options
 
-		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
+		c, err := client.NewClientWithEnv(opt.Environment)
 		if err != nil {
 			return err
 		}

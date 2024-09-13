@@ -99,7 +99,10 @@ func NewS3Client(c *Client, instanceName, region string) (s3client *S3Client, er
 	}
 
 	if pkg.Options.APIKey == "" {
-		s3client.ApiKey = os.Getenv("IBMCLOUD_API_KEY")
+		if s3client.ApiKey = os.Getenv("IBMCLOUD_API_KEY"); s3client.ApiKey == "" {
+			// TODO: remove IBMCLOUD_API_KEY after it has been deprecated completely. Replace with IBMCLOUD_APIKEY
+			s3client.ApiKey = os.Getenv("IBMCLOUD_APIKEY")
+		}
 	} else {
 		s3client.ApiKey = pkg.Options.APIKey
 	}

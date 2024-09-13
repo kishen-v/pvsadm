@@ -65,10 +65,10 @@ func NewPVMClientWithEnv(c *Client, instanceID, instanceName, env string) (*PVMC
 	return NewPVMClient(c, instanceID, instanceName, e)
 }
 
-func NewClientWithEnv(apikey, env string, debug bool) (*Client, error) {
+func NewClientWithEnv(env string) (*Client, error) {
 	e, err := GetEnvironment(env)
 	if err != nil {
 		return nil, err
 	}
-	return NewClient(apikey, e, debug)
+	return NewClient(e)
 }

@@ -46,7 +46,7 @@ type User struct {
 	Account string
 }
 
-func NewClient(apikey string, ep map[string]string, debug bool) (*Client, error) {
+func NewClient(ep map[string]string) (*Client, error) {
 	c := &Client{}
 	auth, err := GetAuthenticator()
 	if err != nil {

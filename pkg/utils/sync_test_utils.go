@@ -16,7 +16,6 @@ package utils
 
 import (
 	"math/rand"
-	"time"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg"
 )
@@ -33,7 +32,6 @@ func randomInt(min, max int) int {
 
 // Generate random string of given length
 func GenerateRandomString(length int) string {
-	rand.Seed(time.Now().UnixNano())
 	bytes := make([]byte, length)
 	for i := 0; i < length; i++ {
 		bytes[i] = byte(randomInt(97, 122))

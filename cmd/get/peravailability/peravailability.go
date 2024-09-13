@@ -37,7 +37,7 @@ var Cmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var perEnabledRegions []string
 		opt := pkg.Options
-		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
+		c, err := client.NewClientWithEnv(opt.Environment)
 		if err != nil {
 			klog.Errorf("failed to create a session with IBM cloud, err: %v", err)
 			return err

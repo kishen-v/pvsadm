@@ -48,7 +48,7 @@ pvsadm purge --help for information
 			klog.Infof("Purge SSH keys for the workspace ID: %s", pkg.Options.WorkspaceID)
 		}
 
-		c, err := client.NewClientWithEnv(opt.APIKey, opt.Environment, opt.Debug)
+		c, err := client.NewClientWithEnv(opt.Environment)
 		if err != nil {
 			klog.Errorf("failed to create a session with IBM cloud, err: %v", err)
 			return err

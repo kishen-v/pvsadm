@@ -40,9 +40,10 @@ import (
 
 // Test case variables
 var (
-	err               error
-	s3client          *client.Client
-	serviceInstance   *resourcecontrollerv2.ResourceInstance
+	err             error
+	s3client        *client.Client
+	serviceInstance *resourcecontrollerv2.ResourceInstance
+	// TODO: remove IBMCLOUD_API_KEY after it has been deprecated completely. Replace with IBMCLOUD_APIKEY
 	APIKey            = os.Getenv("IBMCLOUD_API_KEY")
 	objectsFolderName = "tempFolder"
 	SpecFileName      = "spec/spec.yaml"
@@ -422,7 +423,7 @@ var _ = CMDDescribe("pvsadm image sync tests", func() {
 
 	// Create a session to perform operations for e2e tests.
 	BeforeEach(func() {
-		s3client, err = client.NewClientWithEnv(APIKey, client.DefaultEnvProd, debug)
+		s3client, err = client.NewClientWithEnv(client.DefaultEnvProd)
 		Expect(err).NotTo(HaveOccurred())
 	})
 

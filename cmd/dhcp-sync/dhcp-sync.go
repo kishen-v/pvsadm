@@ -82,7 +82,7 @@ func (io InterfaceMTUOption) IndentedString(prefix string) string {
 }
 
 func syncDHCPD() {
-	c, err := client.NewClientWithEnv(pkg.Options.APIKey, pkg.Options.Environment, false)
+	c, err := client.NewClientWithEnv(pkg.Options.Environment)
 	if err != nil {
 		klog.Fatalf("failed to create a session with IBM cloud: %v", err)
 	}

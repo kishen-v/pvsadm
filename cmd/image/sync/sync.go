@@ -255,7 +255,7 @@ Sample spec.yaml file:
 		start := time.Now()
 
 		// Create resource controller client
-		pvsClient, err := client.NewClientWithEnv(pkg.Options.APIKey, pkg.Options.Environment, pkg.Options.Debug)
+		pvsClient, err := client.NewClientWithEnv(pkg.Options.Environment)
 		if err != nil {
 			return err
 		}

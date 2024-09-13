@@ -153,9 +153,8 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 
 	RunE: func(cmd *cobra.Command, args []string) error {
 		opt := pkg.ImageCMDOptions
-		apikey := pkg.Options.APIKey
 
-		pvsClient, err := client.NewClientWithEnv(apikey, pkg.Options.Environment, pkg.Options.Debug)
+		pvsClient, err := client.NewClientWithEnv(pkg.Options.Environment)
 		if err != nil {
 			return err
 		}
@@ -206,7 +205,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 				opt.ServiceCredName = serviceCredPrefix + "-" + *cosInstance.Name
 			}
 
-			// Create the service credential if does not exist
+			// Create the service credential if it does not exist
 			if len(keys.Resources) == 0 {
 				if key, err = createNewCredentialsWithHMAC(pvsClient, *cosInstance.CRN, opt.ServiceCredName); err != nil {
 					return fmt.Errorf("error while creating HMAC credentials. err: %v", err)
@@ -254,7 +253,7 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 			opt.SecretKey = hmacKeys[secretAccessKey].(string)
 		}
 
-		//By default Bucket Access is private
+		// By default, Bucket Access is private
 		bucketAccess := "private"
 
 		if opt.Public {
@@ -319,16 +318,9 @@ pvsadm image import -n upstream-core-lon04 -b <BUCKETNAME> --object rhel-83-1003
 
 func init() {
 	// TODO pvs-instance-name and pvs-instance-id is deprecated and will be removed in a future release
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.WorkspaceName, "pvs-instance-name", "n", "", "PowerVS Instance name.")
-	Cmd.Flags().MarkDeprecated("pvs-instance-name", "pvs-instance-name is deprecated, workspace-name should be used")
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.WorkspaceID, "pvs-instance-id", "i", "", "PowerVS Instance ID.")
-	Cmd.Flags().MarkDeprecated("pvs-instance-id", "pvs-instance-id is deprecated, workspace-id should be used")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.WorkspaceName, "workspace-name", "", "", "PowerVS Workspace name.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.WorkspaceID, "workspace-id", "", "", "PowerVS Workspace ID.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.BucketName, "bucket", "b", "", "Cloud Object Storage bucket name.")
-	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.COSInstanceName, "cos-instance-name", "s", "", "Cloud Object Storage instance name.")
-	// TODO It's deprecated and will be removed in a future release
-	Cmd.Flags().MarkDeprecated("cos-instance-name", "will be removed in a future version.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.Region, "bucket-region", "r", "", "Cloud Object Storage bucket location.")
 	Cmd.Flags().StringVarP(&pkg.ImageCMDOptions.ImageFilename, "object", "o", "", "Cloud Object Storage object name.")
 	Cmd.Flags().StringVar(&pkg.ImageCMDOptions.AccessKey, "accesskey", "", "Cloud Object Storage HMAC access key.")
