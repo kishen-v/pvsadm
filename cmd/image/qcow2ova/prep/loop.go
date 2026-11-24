@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"k8s.io/klog/v2"
@@ -55,14 +56,47 @@ func partprobe(device string) error {
 	return nil
 }
 
-// get partition number of the image
+// getPartition returns the partition number of the largest partition on the device.
+// It reads partition sizes from /sys/block/<dev>/<part>/size (in 512-byte sectors),
+// which requires no external tools and works without elevated privileges.
 func getPartition(device string) (string, error) {
-	args := fmt.Sprintf("fdisk -l %s | grep ^/dev | wc -l", device)
-	exitcode, out, err := utils.RunCMD("bash", "-c", args)
-	if exitcode != 0 {
-		return "", fmt.Errorf("failed to get partition for device: %s, exitcode: %d, stdout: %s, err: %s", device, exitcode, out, err)
+	// device is e.g. /dev/loop0 → base is "loop0"
+	devName := filepath.Base(device)
+	sysDir := filepath.Join("/sys/block", devName)
+
+	entries, err := os.ReadDir(sysDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to read sysfs for device %s: %w", device, err)
 	}
-	return strings.TrimSpace(out), nil
+
+	var largestPartition string
+	var largestSize int64
+
+	for _, entry := range entries {
+		name := entry.Name()
+		// partition entries are named e.g. loop0p1, loop0p2
+		if !strings.HasPrefix(name, devName+"p") {
+			continue
+		}
+		sizeBytes, err := os.ReadFile(filepath.Join(sysDir, name, "size"))
+		if err != nil {
+			continue
+		}
+		size, err := strconv.ParseInt(strings.TrimSpace(string(sizeBytes)), 10, 64)
+		if err != nil {
+			continue
+		}
+		if size > largestSize {
+			largestSize = size
+			// partition number is the suffix after the last 'p'
+			largestPartition = name[strings.LastIndex(name, "p")+1:]
+		}
+	}
+
+	if largestPartition == "" {
+		return "", fmt.Errorf("no partition found for device: %s", device)
+	}
+	return largestPartition, nil
 }
 
 // growpart resizes the partition
@@ -122,10 +156,16 @@ func bootDeviceuuid(file string) (string, error) {
 	deviceuuid := ""
 	scanner := bufio.NewScanner(bytes.NewReader(data))
 	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, "boot") {
-			fields := strings.Fields(line)
-			deviceuuid = strings.Split(fields[0], "=")[1]
+		line := strings.TrimSpace(scanner.Text())
+		if strings.HasPrefix(line, "#") || line == "" {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) >= 2 && fields[1] == "/boot" && strings.HasPrefix(fields[0], "UUID=") {
+			parts := strings.Split(fields[0], "=")
+			if len(parts) > 1 {
+				deviceuuid = parts[1]
+			}
 		}
 	}
 	return deviceuuid, nil

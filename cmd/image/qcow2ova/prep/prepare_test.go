@@ -439,7 +439,7 @@ func TestWriteFilesToImage_EscapingPathRejected(t *testing.T) {
 
 // Prepare4capture distro routing
 func TestPrepare4capture_UnsupportedDistro(t *testing.T) {
-	err := Prepare4capture("/mnt", "/dev/null", "ubuntu", "", "", "", "", nil)
+	err := Prepare4capture("/mnt", "/dev/null", "unsupported-distro", "", "", "", "", nil)
 	if err == nil {
 		t.Fatal("expected error for unsupported distro, got nil")
 	}

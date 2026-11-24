@@ -52,6 +52,27 @@ func TestRender(t *testing.T) {
 			wantErr: false,
 			notwant: "passwd root",
 		},
+		{
+			name:    "ubuntu image with root password",
+			args:    args{dist: "ubuntu", rootpasswd: "some-password"},
+			want:    "root:some-password",
+			wantErr: false,
+			notwant: "subscription-manager",
+		},
+		{
+			name:    "ubuntu image packages",
+			args:    args{dist: "ubuntu"},
+			want:    "powerpc-utils",
+			wantErr: false,
+			notwant: "yum",
+		},
+		{
+			name:    "ubuntu image rsct packages",
+			args:    args{dist: "ubuntu"},
+			want:    "ppa:ibmpackages/rsct",
+			wantErr: false,
+			notwant: "subscription-manager",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -65,6 +86,44 @@ func TestRender(t *testing.T) {
 			}
 			if tt.notwant != "" && strings.Contains(got, tt.notwant) {
 				t.Errorf("Render() %s contain the %s", got, tt.notwant)
+			}
+		})
+	}
+}
+
+func TestRenderCloudConfig(t *testing.T) {
+	tests := []struct {
+		dist    string
+		want    string
+		notwant string
+	}{
+		{
+			dist:    "ubuntu",
+			want:    "name: ubuntu",
+			notwant: "name: cloud-user",
+		},
+		{
+			dist:    "rhel",
+			want:    "name: cloud-user",
+			notwant: "name: ubuntu",
+		},
+		{
+			dist:    "centos",
+			want:    "name: cloud-user",
+			notwant: "name: ubuntu",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.dist, func(t *testing.T) {
+			got, err := RenderCloudConfig(tt.dist)
+			if err != nil {
+				t.Fatalf("RenderCloudConfig() error = %v", err)
+			}
+			if !strings.Contains(got, tt.want) {
+				t.Errorf("RenderCloudConfig() %s does not contain %s", got, tt.want)
+			}
+			if tt.notwant != "" && strings.Contains(got, tt.notwant) {
+				t.Errorf("RenderCloudConfig() %s contains %s", got, tt.notwant)
 			}
 		})
 	}

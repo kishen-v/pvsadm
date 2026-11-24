@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/ppc64le-cloud/pvsadm/pkg/version"
@@ -29,6 +30,8 @@ import (
 const (
 	VolName    = "disk"
 	VolNameRaw = VolName + ".raw"
+
+	bytesPerGB = 1073741824
 )
 
 type OVA struct {
@@ -37,39 +40,62 @@ type OVA struct {
 	TargetDiskSize        int64
 	PvsadmVersion         string
 	OsId                  string
+	OsDescription         string
+	OsType                string
+}
+
+func getOsDetails(dist string) (osId, osDesc string) {
+	switch strings.ToLower(dist) {
+	case "coreos":
+		return "80", "CoreOS"
+	case "ubuntu":
+		return "94", "Ubuntu"
+	case "centos":
+		return "79", "CentOS"
+	case "rhel":
+		fallthrough
+	default:
+		return "79", "RHEL"
+	}
 }
 
 // Render will generate the OVA spec from the template with all the required information like image name, volume name
 // and size
 func Render(imageName, volumeName string, srcVolumeSize int64, targetDiskSize int64, ImageDist string) (string, error) {
-	//Disk Size should be in bytes
-	osId := "79"
-	if ImageDist == "coreos" {
-		osId = "80"
-	}
+	osId, osDesc := getOsDetails(ImageDist)
 	o := OVA{
-		imageName, volumeName, srcVolumeSize, targetDiskSize * 1073741824, version.Get(), osId,
+		ImageName:     imageName,
+		VolumeName:    volumeName,
+		SrcVolumeSize: srcVolumeSize,
+		// TargetDiskSize should be in bytes
+		TargetDiskSize: targetDiskSize * bytesPerGB,
+		PvsadmVersion:  version.Get(),
+		OsId:           osId,
+		OsDescription:  osDesc,
+		OsType:         strings.ToLower(osDesc),
 	}
 
 	var wr bytes.Buffer
 	t := template.Must(template.New("ova").Parse(ovfTemplate))
 	err := t.Execute(&wr, o)
 	if err != nil {
-		return "", fmt.Errorf("error while rendoring the ova template: %v", err)
+		return "", fmt.Errorf("error while rendering the ova template: %v", err)
 	}
 	return wr.String(), nil
 }
 
 // RenderMeta will generate the OVA meta spec from the template with the image name
-func RenderMeta(imageName string) (string, error) {
+func RenderMeta(imageName string, ImageDist string) (string, error) {
+	_, osDesc := getOsDetails(ImageDist)
 	o := OVA{
 		ImageName: imageName,
+		OsType:    strings.ToLower(osDesc),
 	}
 	var wr bytes.Buffer
 	t := template.Must(template.New("ova").Parse(metaTemplate))
 	err := t.Execute(&wr, o)
 	if err != nil {
-		return "", fmt.Errorf("error while rendoring the ova template: %v", err)
+		return "", fmt.Errorf("error while rendering the ova template: %v", err)
 	}
 	return wr.String(), nil
 }
@@ -82,7 +108,7 @@ func CreateTarArchive(dir string, target string, targetDiskSize int64, imageDist
 		return err
 	}
 	volSize := info.Size()
-	meta, err := RenderMeta(filepath.Base(target))
+	meta, err := RenderMeta(filepath.Base(target), imageDist)
 	if err != nil {
 		return fmt.Errorf("failed to render the meta specfile, got error '%s'", err.Error())
 	}

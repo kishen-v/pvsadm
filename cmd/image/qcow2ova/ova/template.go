@@ -14,7 +14,7 @@
 
 package ova
 
-var metaTemplate = `os-type = rhel
+var metaTemplate = `os-type = {{.OsType}}
 architecture = ppc64le
 vol1-file = {{.ImageName}}
 vol1-type = boot`
@@ -38,7 +38,7 @@ var ovfTemplate = `<?xml version="1.0" encoding="UTF-8"?>
       </ovf:ProductSection>
       <ovf:OperatingSystemSection ovf:id="{{.OsId}}">
         <ovf:Info/>
-        <ovf:Description>RHEL</ovf:Description>
+        <ovf:Description>{{.OsDescription}}</ovf:Description>
         <ns0:architecture xmlns:ns0="ibmpvc">ppc64le</ns0:architecture>
       </ovf:OperatingSystemSection>
       <ovf:VirtualHardwareSection>

@@ -54,21 +54,26 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToDirPath s
 
 	partDev := lo + "p" + partition
 
-	err = mount("nouuid", partDev, mnt)
-	if err != nil {
-		return err
-	}
-	defer Umount(mnt)
-
 	err = growpart(lo, partition)
 	if err != nil {
-		return err
+		klog.Warningf("growpart failed (non-fatal): %v", err)
 	}
 
 	fsType, err := getFSType(partDev)
 	if err != nil {
 		return err
 	}
+
+	mountOpts := "defaults"
+	if fsType == "xfs" {
+		mountOpts = "nouuid"
+	}
+
+	err = mount(mountOpts, partDev, mnt)
+	if err != nil {
+		return err
+	}
+	defer Umount(mnt)
 
 	switch fsType {
 	case "xfs":
@@ -98,7 +103,12 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToDirPath s
 		if err != nil {
 			return err
 		}
-		err = mount("nouuid", bootDev, filepath.Join(mnt, "boot"))
+		bootFSType, _ := getFSType(bootDev)
+		bootMountOpts := "defaults"
+		if bootFSType == "xfs" {
+			bootMountOpts = "nouuid"
+		}
+		err = mount(bootMountOpts, bootDev, filepath.Join(mnt, "boot"))
 		if err != nil {
 			return err
 		}
@@ -106,7 +116,12 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToDirPath s
 	}
 
 	// Verify /boot is mounted properly and files are present.
-	bootDirFiles := []string{"config-*.ppc64le", "efi", "grub2", "initramfs-*.ppc64le.img", "loader", "symvers-*.ppc64le.*", "System.map-*.ppc64le", "vmlinuz-*.ppc64le"}
+	var bootDirFiles []string
+	if dist == "ubuntu" {
+		bootDirFiles = []string{"config-*", "grub", "initrd.img-*", "System.map-*", "vmlinu*-*"}
+	} else {
+		bootDirFiles = []string{"config-*.ppc64le", "efi", "grub2", "initramfs-*.ppc64le.img", "loader", "symvers-*.ppc64le.*", "System.map-*.ppc64le", "vmlinuz-*.ppc64le"}
+	}
 	for _, file := range bootDirFiles {
 		exist, err := checkFileExists(filepath.Join(mnt, "boot", file))
 		if err != nil {
@@ -126,6 +141,21 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToDirPath s
 	}
 	defer UmountHostPartitions(mnt)
 
+	// Copy host resolv.conf into guest so DNS works in chroot
+	guestResolv := filepath.Join(mnt, "etc", "resolv.conf")
+	guestResolvOrig := filepath.Join(mnt, "etc", "resolv.conf.orig")
+	if _, err := os.Lstat(guestResolvOrig); os.IsNotExist(err) {
+		if target, err := os.Readlink(guestResolv); err == nil {
+			_ = os.Symlink(target, guestResolvOrig)
+		} else if _, err := os.Lstat(guestResolv); err == nil {
+			_ = copyFiles(guestResolv, guestResolvOrig)
+		}
+	}
+	_ = os.Remove(guestResolv)
+	if hostResolvBytes, err := os.ReadFile("/etc/resolv.conf"); err == nil {
+		_ = os.WriteFile(guestResolv, hostResolvBytes, 0644)
+	}
+
 	setupStr, err := Render(dist, rhnuser, rhnpasswd, rootpasswd)
 	if err != nil {
 		return err
@@ -135,7 +165,11 @@ func prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToDirPath s
 		return err
 	}
 
-	err = os.WriteFile(filepath.Join(mnt, "/etc/cloud/cloud.cfg"), []byte(CloudConfig), 0644)
+	cloudConfigStr, err := RenderCloudConfig(dist)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(filepath.Join(mnt, "/etc/cloud/cloud.cfg"), []byte(cloudConfigStr), 0644)
 	if err != nil {
 		return err
 	}
@@ -198,7 +232,7 @@ func Prepare4capture(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToD
 	//}
 	//defer os.Chdir(cwd)
 	switch dist := strings.ToLower(dist); dist {
-	case "rhel", "centos":
+	case "rhel", "centos", "ubuntu":
 		return prepare(mnt, volume, dist, rhnuser, rhnpasswd, rootpasswd, writeToDirPath, writeFilesList)
 	case "coreos":
 		klog.Info("No image preparation required for the coreos.")
